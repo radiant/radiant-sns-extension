@@ -10,10 +10,10 @@
       - form.edit_content do
         %p.content
           %label{:for=>"#{model_symbol}_content"} Body
-          ~ f.text_area "content", :class => "textarea", :style => "width: 100%"
+          ~ f.text_area "content", :class => "textarea large", :style => "width: 100%"
         -# create a region called content_bottom so extensions can add
         -# their own items (i.e. allow for a minify checkbox).
-        .row
+        .set
           - render_region :content_bottom do |content_bottom|
             - content_bottom.edit_filter do
               -# creata a filter drop-down *only* if there are any filters installed
@@ -21,6 +21,12 @@
                 %p
                   %label{:for=>"#{model_symbol}_filter"} Filter
                   = select_tag "#{model_symbol}[filter_id]", options_for_select([['<none>', '']] + (model_name + "Filter").constantize.descendants.map { |f| f.filter_name }.sort, model.filter_id), :id => "#{model_symbol}_filter"
+                  %span.reference_links
+                    == #{t('reference')}:
+                    %span{:id => "filter_reference_link"}
+                      = link_to_function t('filter'), "loadFilterReference();"
+                    %span{:id => "tag_reference_link"}
+                      = link_to_function t('available_tags'), "loadTagReference('Page');"
       - form.edit_timestamp do
         = updated_stamp model
   
@@ -28,7 +34,7 @@
   
   - render_region :form_bottom do |form_bottom|
     - form_bottom.edit_buttons do
-      %p.buttons
+      %p.buttons{:style => "clear: left"} 
         = save_model_button(model)
         = save_model_and_continue_editing_button(model)
         or
