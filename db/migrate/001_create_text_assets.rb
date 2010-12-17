@@ -18,8 +18,8 @@ class CreateTextAssets < ActiveRecord::Migration
       'javascript_mime_type',
       'response_cache_directory'
     ].each do |config_name|
-      id = Radiant::Config.find_by_key(config_name).id
-      Radiant::Config.delete(id) unless id.nil?
+      setting = Radiant::Config.find_by_key(config_name)
+      Radiant::Config.delete(setting.id) unless setting.nil?
       say "Removed config for #{config_name}"
     end
   end
