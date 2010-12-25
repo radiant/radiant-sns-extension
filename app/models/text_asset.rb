@@ -15,6 +15,8 @@ class TextAsset < ActiveRecord::Base
 
   object_id_attr :filter, TextAssetFilter
 
+  #should be done much more sophisticated: update Layout to get new timestamp on textasset tags
+  after_save {|record| Layout.update_all({ :updated_at => Time.now })}
 
   include Radiant::Taggable
   class TagError < StandardError; end
@@ -23,7 +25,7 @@ class TextAsset < ActiveRecord::Base
   # URL relative to the web root (accounting for Sns::Config settings)
   def url
     "/" + Sns::Config["#{self.class.to_s.underscore}_directory"] +
-        "/" + self.name
+        "/" + self.name+"?#{self.updated_at.to_i.to_s}"
   end
 
 
