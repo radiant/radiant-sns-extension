@@ -16,7 +16,7 @@ class TextAsset < ActiveRecord::Base
   object_id_attr :filter, TextAssetFilter
 
   #should be done much more sophisticated: update Layout to get new timestamp on textasset tags
-  after_save {|record| Layout.update_all({ :updated_at => Time.now })}
+  after_save {|record| Layout.update_all({ :updated_at => Time.now }) ; Rails.cache.delete(record.name) }
 
   include Radiant::Taggable
   class TagError < StandardError; end
@@ -24,14 +24,33 @@ class TextAsset < ActiveRecord::Base
 
   # URL relative to the web root (accounting for Sns::Config settings)
   def url
-    "/" + Sns::Config["#{self.class.to_s.underscore}_directory"] +
-        "/" + self.name+"?#{self.updated_at.to_i.to_s}"
+    source = "/" + Sns::Config["#{self.class.to_s.underscore}_directory"] + "/" + self.name+"?#{self.updated_at.to_i.to_s}"
+    host = compute_asset_host(source)
+    "#{host}#{source}"
   end
 
+  # calculate asset_host from Rails
+  def compute_asset_host(source)
+    if host = ActionController::Base.asset_host
+      if host.is_a?(Proc) || host.respond_to?(:call)
+        case host.is_a?(Proc) ? host.arity : host.method(:call).arity
+          when 2
+            request = controller.respond_to?(:request) && controller.request
+            host.call(source, request)
+          else
+            host.call(source)
+        end
+      else
+        (host =~ /%d/) ? host % (source.hash % 4) : host
+      end
+    end
+  end
 
   # Parses, and filters the current content for output
   def render
-    self.filter.filter(parse(self.content))
+    Rails.cache.fetch(name) do
+      self.filter.filter(parse(self.content))
+    end
   end
 
 
