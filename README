@@ -4,7 +4,12 @@ The Styles 'n Scripts extension was an extension requested by John Long
 as a means of separating javascripts & stylesheets from other site content
 stored in pages.
 
+slightly modified
 
+* to add a cache busting timestamp allowing for really far future expires headers
+* update the layout to re-render pages so this gets set if you modify a stylesheet or javascript file
+* respect the Rails asset_host setting
+* Rails cache the render of an object and expire it on changing the asset
 
 == CONTENTS
 In this README you'll find:
@@ -12,8 +17,6 @@ In this README you'll find:
   2. Why Change Things?
   3. Installation
   4. To Do
-
-
 
 == USAGE
 Using this extension is rather painless.  If you can use the rest of Radiant,
