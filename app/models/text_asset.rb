@@ -16,11 +16,10 @@ class TextAsset < ActiveRecord::Base
   object_id_attr :filter, TextAssetFilter
 
   #should be done much more sophisticated: update Layout to get new timestamp on textasset tags
-  after_save {|record| Layout.update_all({ :updated_at => Time.now }) ; Rails.cache.delete(record.name) }
+  after_save {|record| Layout.update_all({ :updated_at => Time.now }) ; Rails.cache.delete("#{record.id}-#{record.name}") }
 
   include Radiant::Taggable
   class TagError < StandardError; end
-
 
   # URL relative to the web root (accounting for Sns::Config settings)
   def url
@@ -48,7 +47,7 @@ class TextAsset < ActiveRecord::Base
 
   # Parses, and filters the current content for output
   def render
-    Rails.cache.fetch(name) do
+    Rails.cache.fetch("#{id}-#{name}") do
       self.filter.filter(parse(self.content))
     end
   end
