@@ -4,29 +4,24 @@ module Sns
     def self.included(base)
       base.class_eval do
         skip_before_filter :authenticate
-        before_filter :parse_url_for_text_assets, :only => :show_page
+        before_filter :handle_text_assets, :only => :show_page
       end
     end
 
     private
 
-      def parse_url_for_text_assets
-        url = params[:url]
-        if url.kind_of?(Array)
-          url = url.join('/')
-        else
-          url = url.to_s
-        end
-        if url =~ %r{^\/?(#{Sns::Config[:stylesheet_directory]})\/(.*)$}
-          text_asset = Stylesheet.find_by_name($2)
+      def handle_text_assets
+
+        if params[:kind] && params[:kind] == :stylesheet
+          text_asset = Stylesheet.find_by_name(params[:text_asset])
           if text_asset
             set_text_asset_cache_control
             process_text_asset(text_asset, 'stylesheet')
             @performed_render = true
           end
 
-        elsif url =~ %r{^\/?(#{Sns::Config[:javascript_directory]})\/(.*)$}
-          text_asset = Javascript.find_by_name($2)
+        elsif params[:kind] && params[:kind] == :javascript
+          text_asset = Javascript.find_by_name(params[:text_asset])
           if text_asset
             set_text_asset_cache_control
             process_text_asset(text_asset, 'javascript')
@@ -44,5 +39,6 @@ module Sns
         response.status = ActionController::Base::DEFAULT_RENDER_STATUS_CODE
         response.headers['Content-Type'] = Sns::Config["#{asset_type}_mime_type"]
       end
+
   end
 end
